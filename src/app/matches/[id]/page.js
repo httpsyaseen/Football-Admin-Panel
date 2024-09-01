@@ -37,6 +37,7 @@ import Sidebar from "@/components/Sidebar";
 import DeleteDialog from "@/components/DeleteDialog";
 import { host } from "@/lib/host";
 import MatchCreationDialog from "@/components/matchDialog";
+import Loading from "@/components/Loading";
 
 export default function MatchManagementPage({ params }) {
   const leagueId = params.id;
@@ -268,6 +269,7 @@ export default function MatchManagementPage({ params }) {
           setModal={setIsDeleteDialogOpen}
           handleDelete={handleDeleteMatch}
         />
+        {loading && <Loading />}
       </main>
     </div>
   );

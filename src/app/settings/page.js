@@ -77,6 +77,9 @@ export default function AdConfigPage() {
     try {
       const response = await fetch(`${host}/appconfig`, {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json", // Specify the content type as JSON
+        },
         body: JSON.stringify(config),
       });
       if (!response.ok) throw new Error("Failed to update config");
@@ -93,6 +96,9 @@ export default function AdConfigPage() {
     try {
       const response = await fetch(`${host}/appconfig`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json", // Specify the content type as JSON
+        },
         body: JSON.stringify(config),
       });
       if (!response.ok) throw new Error("Failed to update config");
