@@ -10,35 +10,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
-import { host } from "@/lib/host";
-import toast from "react-hot-toast";
-import Loading from "@/components/Loading";
-
+import { getLeaguesFromSessionStorage } from "@/utils/league";
 export default function Component() {
   const [leagues, setLeagues] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getLeagues = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${host}/leagues`);
-        if (!response.ok) {
-          throw Error("Cannot Fetch Leagues");
-        } else {
-          const data = await response.json();
-          setLeagues(data.data);
-        }
-      } catch (err) {
-        toast.error("Error Fetch Leagues");
-      } finally {
-        setLoading(false);
-      }
-    };
-    getLeagues();
+    const data = getLeaguesFromSessionStorage();
+    setLeagues(data || []);
   }, []);
   return (
     <div className="flex h-screen bg-gray-100">
@@ -65,7 +45,7 @@ export default function Component() {
                   key={league.name}
                   className="group cursor-pointer hover:bg-gray-100"
                 >
-                  <Link href={`/teams/${league._id}`} className="contents">
+                  <Link href={`/matches/${league._id}`} className="contents">
                     <TableCell className="font-medium">{league.name}</TableCell>
                     <TableCell>
                       <Image
@@ -82,7 +62,6 @@ export default function Component() {
               ))}
             </TableBody>
           </Table>
-          {loading && <Loading />}
         </div>
       </main>
     </div>
