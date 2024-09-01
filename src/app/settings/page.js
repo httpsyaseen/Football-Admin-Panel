@@ -11,8 +11,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/use-toast";
+import { host } from "@/lib/host";
 import Sidebar from "@/components/Sidebar";
+import toast from "react-hot-toast";
 
 export default function AdConfigPage() {
   const [config, setConfig] = useState({
@@ -26,7 +27,7 @@ export default function AdConfigPage() {
     videoPlayerAdTime: 10,
     redirectApp: false,
     redirectLink: "",
-    redirectMessage: "",
+    redirectMessage: "Cannot Fetch AppConfig",
     rateMessage: false,
     appUrl: "",
   });
@@ -38,23 +39,16 @@ export default function AdConfigPage() {
     const fetchConfig = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          "http://192.168.100.16:3001/api/v1/adconfig"
-        );
+        const response = await fetch(`${host}/appconfig`);
         if (!response.ok) throw new Error("Failed to fetch config");
         const data = await response.json();
-        console.log(data);
         if (data.message) {
           setNewButton(true);
         } else {
           setConfig(data.data);
         }
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load configuration",
-          variant: "destructive",
-        });
+        toast.error("Cannot Fetch AppConfig");
       } finally {
         setIsLoading(false);
       }
@@ -81,22 +75,14 @@ export default function AdConfigPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3001/api/v1/adconfig", {
+      const response = await fetch(`${host}/appconfig`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
       });
       if (!response.ok) throw new Error("Failed to update config");
-      toast({
-        title: "Success",
-        description: "Configuration updated successfully",
-      });
+      toast.success("appConfig Updated Sucessfully");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update configuration",
-        variant: "destructive",
-      });
+      toast.error("Cannot Update Configuration");
     } finally {
       setIsLoading(false);
     }
@@ -105,23 +91,15 @@ export default function AdConfigPage() {
   const createAdConfig = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3001/api/v1/adconfig", {
+      const response = await fetch(`${host}/appconfig`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
       });
       if (!response.ok) throw new Error("Failed to update config");
-      toast({
-        title: "Success",
-        description: "Configuration updated successfully",
-      });
+      toast.success("Configuration Created ");
       setNewButton(false);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create configuration",
-        variant: "destructive",
-      });
+      toast.error("Error in Creating App Configuration");
     } finally {
       setIsLoading(false);
     }
@@ -130,9 +108,8 @@ export default function AdConfigPage() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
-
       {newButton ? (
-        <div className="flex min-h-screen justify-center align-center flex-col gap-10 container mx-auto text-center">
+        <div className="flex flex-1 min-h-screen justify-center align-center flex-col gap-10 container mx-auto text-center">
           <h1 className="text-4xl font-bold">Create Ad Configuration.</h1>
           <Button
             onClick={createAdConfig}
