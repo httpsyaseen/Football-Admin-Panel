@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Trophy, Settings, Flame, Dribbble, CalendarDays } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -12,7 +14,7 @@ export default function Sidebar() {
           <li className="mb-10 font-bold text-lg">
             <Link
               href="/"
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-200 ${
                 path === "/"
               } && "bg-gray-200"
               }`}
@@ -25,7 +27,7 @@ export default function Sidebar() {
           <li>
             <Link
               href="/leagues"
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-200 ${
                 isActive("/leagues") && "bg-gray-200"
               }`}
             >
@@ -36,7 +38,7 @@ export default function Sidebar() {
           <li>
             <Link
               href="/teams"
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-200 ${
                 isActive("/teams") && "bg-gray-200"
               }`}
             >
@@ -47,7 +49,7 @@ export default function Sidebar() {
           <li>
             <Link
               href="/matches"
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-200 ${
                 isActive("/matches") && "bg-gray-200"
               }`}
             >
@@ -58,7 +60,7 @@ export default function Sidebar() {
           <li>
             <Link
               href="/settings"
-              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-200  ${
                 isActive("/settings") && "bg-gray-200"
               }`}
             >

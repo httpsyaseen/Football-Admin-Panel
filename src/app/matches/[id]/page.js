@@ -24,31 +24,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Pencil, Trash2 } from "lucide-react";
 
-// Mock data for matches
-const initialMatches = [
-  {
-    id: 1,
-    team1: { name: "Team A", logo: "/placeholder.svg" },
-    team2: { name: "Team B", logo: "/placeholder.svg" },
-    isLive: true,
-    time: "15:00",
-  },
-  {
-    id: 2,
-    team1: { name: "Team C", logo: "/placeholder.svg" },
-    team2: { name: "Team D", logo: "/placeholder.svg" },
-    isLive: false,
-    time: "18:30",
-  },
-  {
-    id: 3,
-    team1: { name: "Team E", logo: "/placeholder.svg" },
-    team2: { name: "Team F", logo: "/placeholder.svg" },
-    isLive: false,
-    time: "20:00",
-  },
-];
-
 export default function MatchesPage() {
   const [matches, setMatches] = useState(initialMatches);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

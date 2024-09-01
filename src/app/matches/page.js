@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Table,
@@ -13,34 +13,36 @@ import {
 
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { host } from "@/lib/host";
+import toast from "react-hot-toast";
+import Loading from "@/components/Loading";
 
 export default function Component() {
-  const [leagues, setLeagues] = useState([
-    {
-      id: 1,
-      name: "Premier League",
-      image: "/images/l3.jpeg",
-      description: "Top-tier English football league",
-    },
-    {
-      id: 2,
-      name: "La Liga",
-      image: "/images/l3.jpeg",
-      description: "Spanish professional football league",
-    },
-    {
-      id: 3,
-      name: "Bundesliga",
-      image: "/images/l3.jpeg",
-      description: "German football league",
-    },
-  ]);
+  const [leagues, setLeagues] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const getLeagues = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${host}/leagues`);
+        if (!response.ok) {
+          throw Error("Cannot Fetch Leagues");
+        } else {
+          const data = await response.json();
+          setLeagues(data.data);
+        }
+      } catch (err) {
+        toast.error("Error Fetch Leagues");
+      } finally {
+        setLoading(false);
+      }
+    };
+    getLeagues();
+  }, []);
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <Sidebar />
-
       <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">
@@ -58,12 +60,12 @@ export default function Component() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leagues.map((league) => (
+              {leagues?.map((league) => (
                 <TableRow
                   key={league.name}
                   className="group cursor-pointer hover:bg-gray-100"
                 >
-                  <Link href={`/matches/${league.id}`} className="contents">
+                  <Link href={`/teams/${league._id}`} className="contents">
                     <TableCell className="font-medium">{league.name}</TableCell>
                     <TableCell>
                       <Image
@@ -80,6 +82,7 @@ export default function Component() {
               ))}
             </TableBody>
           </Table>
+          {loading && <Loading />}
         </div>
       </main>
     </div>

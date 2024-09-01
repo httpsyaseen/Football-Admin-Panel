@@ -20,13 +20,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Pencil, PlusCircle, Trash2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import toast from "react-hot-toast";
+import { host } from "@/lib/host";
+import DeleteDialog from "@/components/DeleteDialog";
 
 export default function TeamsPage({ params }) {
   const leagueId = params.id;
   const [teams, setTeams] = useState([]);
+  const [loading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -36,11 +39,18 @@ export default function TeamsPage({ params }) {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await fetch(`http://192.168.100.16:3001/api/v1/teams`);
+        setIsLoading(true);
+        const response = await fetch(`${host}/teams/${leagueId}`);
+        if (!response.ok) {
+          throw Error("Cannot get Teams");
+        }
         const data = await response.json();
         setTeams(data.data);
       } catch (error) {
-        console.error("Error fetching teams:", error);
+        console.log(error);
+        toast.error("Error Fetching Teams");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -55,21 +65,21 @@ export default function TeamsPage({ params }) {
     formData.append("leagueId", leagueId);
 
     try {
-      const response = await fetch("http://192.168.100.16:3001/api/v1/teams", {
+      const response = await fetch(`${host}/teams`, {
         method: "POST",
         body: formData,
       });
 
-      if (response.ok) {
-        const createdTeam = await response.json();
-        setTeams([...teams, createdTeam.data]);
-        setIsDialogOpen(false);
-        setNewTeam({ teamName: "", teamImage: null });
-      } else {
+      if (!response.ok) {
         throw new Error("Failed to create team");
       }
+      const createdTeam = await response.json();
+      setTeams([...teams, createdTeam.data]);
+      setIsDialogOpen(false);
+      setNewTeam({ teamName: "", teamImage: null });
+      toast.success("Created Team Succesfully");
     } catch (error) {
-      console.error("Error creating team:", error);
+      toast.error("Error Creating Team");
     }
   };
 
@@ -82,27 +92,23 @@ export default function TeamsPage({ params }) {
     }
 
     try {
-      const response = await fetch(
-        `http://192.168.100.16:3001/api/v1/teams/${currentTeam.id}`,
-        {
-          method: "PATCH",
-          body: formData,
-        }
-      );
-
-      if (response.ok) {
-        const updatedTeam = await response.json();
-        setTeams(
-          teams.map((team) =>
-            team.id === updatedTeam.data.id ? updatedTeam.data : team
-          )
-        );
-        setIsEditDialogOpen(false);
-      } else {
+      const response = await fetch(`${host}/teams/${currentTeam._id}`, {
+        method: "PATCH",
+        body: formData,
+      });
+      if (!response.ok) {
         throw new Error("Failed to edit team");
       }
+      const updatedTeam = await response.json();
+      setTeams(
+        teams.map((team) =>
+          team.id === updatedTeam.data.id ? updatedTeam.data : team
+        )
+      );
+      setIsEditDialogOpen(false);
+      toast.success(`${updatedTeam?.data?.teamName}  Updated`);
     } catch (error) {
-      console.error("Error editing team:", error);
+      toast.error("Error In Editing Teams");
     }
   };
 
@@ -115,14 +121,14 @@ export default function TeamsPage({ params }) {
         }
       );
 
-      if (response.ok) {
-        setTeams(teams.filter((team) => team._id !== currentTeam._id));
-        setIsDeleteDialogOpen(false);
-      } else {
+      if (!response.ok) {
         throw new Error("Failed to delete team");
       }
+      setTeams(teams.filter((team) => team._id !== currentTeam._id));
+      setIsDeleteDialogOpen(false);
+      toast.success("Team Deleted Successfully");
     } catch (error) {
-      console.error("Error deleting team:", error);
+      toast.error("Error in Deleting Teams");
     }
   };
 
@@ -230,7 +236,6 @@ export default function TeamsPage({ params }) {
           </Table>
         </div>
 
-        {/* Edit Team Dialog */}
         {currentTeam && (
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent>
@@ -242,12 +247,12 @@ export default function TeamsPage({ params }) {
                   <Label htmlFor="name">League Name</Label>
                   <Input
                     id="name"
-                    name="name"
-                    value={currentTeam.name}
+                    name="teamName"
+                    value={currentTeam.teamName}
                     onChange={(e) =>
                       setCurrentTeam({
                         ...currentTeam,
-                        name: e.target.value,
+                        teamName: e.target.value,
                       })
                     }
                     required
@@ -257,12 +262,12 @@ export default function TeamsPage({ params }) {
                   <Label htmlFor="image">Image</Label>
                   <Input
                     id="image"
-                    name="image"
+                    name="teamImage"
                     type="file"
                     onChange={(e) =>
                       setCurrentTeam({
                         ...currentTeam,
-                        image: e.target.files[0],
+                        teamImage: e.target.files[0],
                       })
                     }
                   />
@@ -274,29 +279,11 @@ export default function TeamsPage({ params }) {
           </Dialog>
         )}
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirm Delete</DialogTitle>
-            </DialogHeader>
-            <p>Are you sure you want to delete this Team?</p>
-            <div className="flex justify-end space-x-4">
-              <Button
-                variant="ghost"
-                onClick={() => setIsDeleteDialogOpen(false)}
-              >
-                No
-              </Button>
-              <Button
-                onClick={handleDeleteTeam}
-                className="bg-red-500 text-white hover:bg-red-600"
-              >
-                Yes, Delete
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <DeleteDialog
+          modal={isDeleteDialogOpen}
+          setModal={setIsDeleteDialogOpen}
+          handleDelete={handleDeleteTeam}
+        />
       </main>
     </div>
   );

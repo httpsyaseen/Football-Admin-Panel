@@ -25,15 +25,21 @@ import { Pencil, PlusCircle, Trash2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import toast from "react-hot-toast";
 import { host } from "@/lib/host";
-import Loader from "@/components/Loader";
+import {
+  addLeague,
+  deleteLeagueFromStorage,
+  getLeaguesFromSessionStorage,
+  setUpdateLeagueStorage,
+} from "@/utils/league";
+import DeleteDialog from "@/components/DeleteDialog";
 
 export default function Component() {
   const [leagues, setLeagues] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentLeague, setCurrentLeague] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [newLeague, setNewLeague] = useState({
     name: "",
     image: "",
@@ -41,22 +47,8 @@ export default function Component() {
   });
 
   useEffect(() => {
-    const getLeagues = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${host}/leagues`);
-        if (!response.ok) {
-          throw Error("Cannot Fetch Leagues");
-        }
-        const data = await response.json();
-        setLeagues(data.data);
-      } catch (err) {
-        toast.error("Error Fetch Leagues");
-      } finally {
-        setLoading(false);
-      }
-    };
-    getLeagues();
+    const data = getLeaguesFromSessionStorage();
+    setLeagues(data || []);
   }, []);
 
   const handleInputChange = (e) => {
@@ -66,7 +58,7 @@ export default function Component() {
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     const formData = new FormData();
     formData.append("name", newLeague.name);
     formData.append("image", e.target.image.files[0]);
@@ -79,64 +71,88 @@ export default function Component() {
 
     if (response.ok) {
       toast.success("League Created");
-      const createdLeague = await response.json();
-      setLeagues((prev) => [...prev, createdLeague.data]);
+      const updatedLeague = await response.json();
+      addLeague(updatedLeague.data);
+      setLeagues((prev) => [...prev, updatedLeague.data]);
       setNewLeague({ name: "", image: "", description: "" });
       setIsCreateModalOpen(false);
     } else {
       toast.error("Error Creating League");
     }
+    setLoading(false);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     const formData = new FormData();
     const newImage = e.target.image?.files[0];
 
-    // Check if a new image has been selected
     if (newImage) {
       console.log(newImage);
       formData.append("leagueImage", newImage);
     }
-
     // Append other fields regardless of change
     formData.append("name", currentLeague.name);
     formData.append("description", currentLeague.description);
-    console.log(formData);
-    // Prepare the PATCH request
-    const response = await fetch(`${host}/leagues/${currentLeague._id}`, {
-      method: "PATCH",
-      body: formData,
-    });
 
-    if (response.ok) {
-      toast.success("League Updated");
-      const updatedLeague = await response.json();
-      setLeagues((prev) =>
-        prev.map((league) =>
-          league._id === updatedLeague.data._id ? updatedLeague.data : league
-        )
-      );
-      setIsEditModalOpen(false);
-    } else {
-      toast.error("League Cannot Updated");
+    try {
+      const response = await fetch(`${host}/leagues/${currentLeague._id}`, {
+        method: "PATCH",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const updatedLeague = await response.json();
+        setUpdateLeagueStorage(updatedLeague.data);
+        setLeagues((prevLeagues) => {
+          return prevLeagues.map((league) =>
+            league._id === updatedLeague.data._id ? updatedLeague.data : league
+          );
+        });
+
+        toast.success("League Updated");
+        setIsEditModalOpen(false);
+      } else {
+        toast.error("League Cannot Be Updated");
+      }
+    } catch (error) {
+      console.error("Error updating league:", error);
+      toast.error("An error occurred while updating the league");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteLeague = async () => {
-    const response = await fetch(`${host}/leagues/${currentLeague._id}`, {
-      method: "DELETE",
-    });
+    setLoading(true);
+    try {
+      const response = await fetch(`${host}/leagues/${currentLeague._id}`, {
+        method: "DELETE",
+      });
 
-    if (response.ok) {
-      toast.success("League Deleted Successfully");
-      setLeagues((prev) =>
-        prev.filter((league) => league._id !== currentLeague._id)
-      );
-      setIsDeleteModalOpen(false);
-    } else {
-      toast.error("Error in Deleting League");
+      if (response.ok) {
+        deleteLeagueFromStorage(currentLeague);
+        setLeagues((prevLeagues) => {
+          const updatedLeagues = prevLeagues.filter(
+            (league) => league._id !== currentLeague._id
+          );
+          return updatedLeagues;
+        });
+
+        toast.success("League Deleted Successfully");
+        setIsDeleteModalOpen(false);
+      } else {
+        const errorData = await response.json();
+        toast.error(
+          `Error in Deleting League: ${errorData.message || "Unknown error"}`
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting league:", error);
+      toast.error("An error occurred while deleting the league");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,7 +204,9 @@ export default function Component() {
                     required
                   />
                 </div>
-                <Button type="submit">Add League</Button>
+                <Button type="submit">
+                  {loading ? "Loading" : "Add League"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -302,35 +320,19 @@ export default function Component() {
                     required
                   />
                 </div>
-                <Button type="submit">Update League</Button>
+                <Button type="submit">
+                  {loading ? "Loading" : "Update League"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
         )}
 
-        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirm Delete</DialogTitle>
-            </DialogHeader>
-            <p>Are you sure you want to delete this league?</p>
-            <div className="flex justify-end space-x-4">
-              <Button
-                variant="ghost"
-                onClick={() => setIsDeleteModalOpen(false)}
-              >
-                No
-              </Button>
-              <Button
-                onClick={handleDeleteLeague}
-                className="bg-red-500 text-white hover:bg-red-600"
-              >
-                Yes, Delete
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-        {loading && <Loader />}
+        <DeleteDialog
+          modal={isDeleteModalOpen}
+          setModal={setIsDeleteModalOpen}
+          handleDelete={handleDeleteLeague}
+        />
       </main>
     </div>
   );
