@@ -12,25 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import MatchEditDialog from "@/components/EditDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Pencil, PlusCircle, Trash2, Bell, X } from "lucide-react";
+import { Pencil, Trash2, Bell, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import Sidebar from "@/components/Sidebar";
@@ -65,6 +47,7 @@ export default function MatchManagementPage({ params }) {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("Fetched Called");
       setLoading(true);
       try {
         const matchesResponse = await axios.get(`${host}/matches/${leagueId}`);
@@ -85,7 +68,6 @@ export default function MatchManagementPage({ params }) {
 
   const getTeamName = (id) => {
     const team = teamOptions.find((team) => team._id === id);
-    console.log(teamOptions);
     return team?.teamName || "Reload Page";
   };
 
@@ -132,16 +114,13 @@ export default function MatchManagementPage({ params }) {
   };
 
   const handleEditMatch = async (e) => {
-    e.preventDefault();
-    console.log(currentMatch);
-
     try {
       const response = await axios.patch(
         `${host}/matches/${currentMatch._id}`,
         currentMatch
       );
       const updatedMatches = matches.map((match) =>
-        match.id === response.data.data.id ? response.data.data : match
+        match._id === response.data.data._id ? response.data.data : match
       );
       setMatches(updatedMatches);
       setIsEditDialogOpen(false);

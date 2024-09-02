@@ -84,6 +84,7 @@ export default function TeamsPage({ params }) {
   };
 
   const handleEditTeam = async (e) => {
+    console.log(currentTeam);
     e.preventDefault();
     const formData = new FormData();
     formData.append("teamName", currentTeam.teamName);
@@ -102,7 +103,7 @@ export default function TeamsPage({ params }) {
       const updatedTeam = await response.json();
       setTeams(
         teams.map((team) =>
-          team.id === updatedTeam.data.id ? updatedTeam.data : team
+          team._id === updatedTeam.data._id ? updatedTeam.data : team
         )
       );
       setIsEditDialogOpen(false);

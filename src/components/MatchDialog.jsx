@@ -28,11 +28,6 @@ export default function MatchCreationDialog({
   setNewMatch,
   handleCreateMatch,
 }) {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(newMatch);
-  };
-
   const addChannel = () => {
     setNewMatch({
       ...newMatch,
