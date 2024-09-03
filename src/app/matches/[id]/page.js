@@ -20,6 +20,7 @@ import DeleteDialog from "@/components/DeleteDialog";
 import { host } from "@/lib/host";
 import MatchCreationDialog from "@/components/matchDialog";
 import Loading from "@/components/Loading";
+import { getLeaguesFromSessionStorage } from "@/utils/league";
 
 export default function MatchManagementPage({ params }) {
   const leagueId = params.id;
@@ -144,13 +145,25 @@ export default function MatchManagementPage({ params }) {
     }
   };
 
-  const handleNotification = async (matchId) => {
-    try {
-      await axios.post(`${host}/matches/${matchId}/notify`);
-      toast.success(`Notification sent for match ${matchId}`);
-    } catch (error) {
-      toast.error("Error sending notification");
-    }
+  const handleNotification = async (match) => {
+    const leagues = getLeaguesFromSessionStorage();
+    console.log(match);
+    const currentLeague = leagues?.find((league) => league._id === leagueId);
+    console.log(currentLeague);
+
+    await toast.promise(
+      axios.post(`${host}/games/notify`, {
+        title: `${currentLeague.name}`,
+        body: `${getTeamName(match.team1)} VS ${getTeamName(match.team2)}`,
+      }),
+      {
+        loading: "Sending Notifications",
+        success: `Notification sent for ${getTeamName(
+          match.team1
+        )} VS ${getTeamName(match.team2)}`,
+        error: "Error sending notification",
+      }
+    );
   };
 
   return (
@@ -195,7 +208,7 @@ export default function MatchManagementPage({ params }) {
                   <TableCell>{match.isLive ? "Yes" : "No"}</TableCell>
                   <TableCell>
                     <Button
-                      onClick={() => handleNotification(match.id)}
+                      onClick={() => handleNotification(match)}
                       className="bg-blue-500 hover:bg-blue-600"
                     >
                       <Bell className="h-4 w-4" />
