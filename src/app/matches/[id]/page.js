@@ -209,7 +209,7 @@ export default function MatchManagementPage({ params }) {
                   <TableCell>
                     <Button
                       onClick={() => handleNotification(match)}
-                      className="bg-blue-500 hover:bg-blue-600"
+                      className="bg-green-500 hover:bg-green-600"
                     >
                       <Bell className="h-4 w-4" />
                       <span className="sr-only">Send notification</span>

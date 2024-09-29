@@ -11,12 +11,21 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { host } from "@/lib/host";
 import Sidebar from "@/components/Sidebar";
 import toast from "react-hot-toast";
 
 export default function AdConfigPage() {
   const [config, setConfig] = useState({
+    adsDisplay: true,
+    adType: true,
     channelScreenAd: false,
     matchScreenAd: false,
     appOpenAd: false,
@@ -30,6 +39,9 @@ export default function AdConfigPage() {
     redirectMessage: "Cannot Fetch AppConfig",
     rateMessage: false,
     appUrl: "",
+    appOpenAdId: "",
+    interstitialAdId: "",
+    bannerAdId: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +76,13 @@ export default function AdConfigPage() {
     }));
   };
 
+  const handleSelectChange = (value) => {
+    setConfig((prev) => ({
+      ...prev,
+      adType: value === "true",
+    }));
+  };
+
   const handleToggle = (name) => {
     setConfig((prev) => ({
       ...prev,
@@ -78,12 +97,12 @@ export default function AdConfigPage() {
       const response = await fetch(`${host}/appconfig`, {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json", // Specify the content type as JSON
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(config),
       });
       if (!response.ok) throw new Error("Failed to update config");
-      toast.success("appConfig Updated Sucessfully");
+      toast.success("appConfig Updated Successfully");
     } catch (error) {
       toast.error("Cannot Update Configuration");
     } finally {
@@ -97,12 +116,12 @@ export default function AdConfigPage() {
       const response = await fetch(`${host}/appconfig`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // Specify the content type as JSON
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(config),
       });
       if (!response.ok) throw new Error("Failed to update config");
-      toast.success("Configuration Created ");
+      toast.success("Configuration Created");
       setNewButton(false);
     } catch (error) {
       toast.error("Error in Creating App Configuration");
@@ -134,6 +153,22 @@ export default function AdConfigPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="adType">Ad Type</Label>
+                  <Select
+                    id="adType"
+                    value={config.adType.toString()}
+                    onValueChange={handleSelectChange}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select ad type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">AdMob</SelectItem>
+                      <SelectItem value="false">AppLovin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 {[
                   "channelScreenAd",
                   "matchScreenAd",
@@ -153,7 +188,44 @@ export default function AdConfigPage() {
                   </div>
                 ))}
               </div>
-
+              <div>
+                <Label htmlFor="videoPlayerAdTime">AppLovin SDK ID</Label>
+                <Input
+                  id="sdk"
+                  name="sdk"
+                  value={config.sdk}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="videoPlayerAdTime">AppLovin AppOpen Id</Label>
+                <Input
+                  id="appOpenAdId"
+                  name="appOpenAdId"
+                  value={config.appOpenAdId}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="videoPlayerAdTime">
+                  AppLovin Interstitial Id
+                </Label>
+                <Input
+                  id="interstitialAdId"
+                  name="interstitialAdId"
+                  value={config.interstitialAdId}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="videoPlayerAdTime">AppLovin Banner Id</Label>
+                <Input
+                  id="bannerAdId"
+                  name="bannerAdId"
+                  value={config.bannerAdId}
+                  onChange={handleChange}
+                />
+              </div>
               <div>
                 <Label htmlFor="videoPlayerAdTime">
                   Video Player Ad Time (seconds)
@@ -166,7 +238,6 @@ export default function AdConfigPage() {
                   onChange={handleChange}
                 />
               </div>
-
               <div className="flex items-center justify-between">
                 <Label htmlFor="redirectApp">Redirect App</Label>
                 <Switch

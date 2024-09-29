@@ -9,6 +9,7 @@ export const fetchAndStoreLeagues = async (setLoading) => {
     const data = response.data;
     sessionStorage.setItem("leagues", JSON.stringify(data.data));
   } catch (err) {
+    console.log(err);
     toast.error("Error Fetching Leagues");
   } finally {
     setLoading(false);
