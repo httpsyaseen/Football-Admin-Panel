@@ -18,7 +18,7 @@ import { toast } from "react-hot-toast";
 import Sidebar from "@/components/Sidebar";
 import DeleteDialog from "@/components/DeleteDialog";
 import { host } from "@/lib/host";
-import MatchCreationDialog from "@/components/matchDialog";
+import MatchCreationDialog from "@/components/MatchDialog";
 import Loading from "@/components/Loading";
 import { getLeaguesFromSessionStorage } from "@/utils/league";
 
@@ -116,10 +116,13 @@ export default function MatchManagementPage({ params }) {
 
   const handleEditMatch = async (e) => {
     try {
+      e.preventDefault();
+      console.log(currentMatch);
       const response = await axios.patch(
         `${host}/matches/${currentMatch._id}`,
         currentMatch
       );
+      console.log(response);
       const updatedMatches = matches.map((match) =>
         match._id === response.data.data._id ? response.data.data : match
       );
